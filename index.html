@@ -103,20 +103,21 @@
         .secret-btn { background: #1a0505; border: 2px solid #ff1111; color: #ff1111; font-weight: bold; padding: 8px 20px; cursor: pointer; font-family: monospace; border-radius: 4px; box-shadow: 0 0 8px rgba(255,0,0,0.3); }
         .secret-btn:hover { background: #ff1111; color: #000; }
         
-        /* Doors Grid Setup */
         .doors-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px; width: 100%; max-width: 280px; }
         .door-node { background: #200505; border: 1px solid #501111; color: #ff4444; font-size: 11px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; border-radius: 3px; }
         .door-node:hover { background: #400a0a; border-color: #aa1111; }
         
-        /* Breaking Heart Config */
         .heart-wrapper { font-size: 20px; font-weight: bold; cursor: pointer; text-align: center; white-space: pre; line-height: 1.1; user-select: none; filter: drop-shadow(0 0 10px #ff0000); transform: scale(1); transition: transform 0.1s; }
         .heart-wrapper:active { transform: scale(0.92); }
         
-        /* Game 3 Maze Layout */
-        #maze-view-canvas { border: 2px solid #ff1111; background: #000; cursor: crosshair; display: block; margin: 0 auto; }
-        .void-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:#000; color:#440000; font-size:36px; display:flex; align-items:center; justify-content:center; font-weight:bold; letter-spacing:8px; z-index:999; animation: textGlitchShake 0.2s infinite; }
+        #maze-view-canvas { border: 2px solid #ff1111; background: #000; display: block; margin: 0 auto; outline: none; }
+        
+        /* Fullscreen Void Container Configuration Styles */
+        .void-screen-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #555; font-size: 14px; z-index: 100000; overflow: hidden; padding: 15px; font-family: monospace; white-space: pre; line-height: 1.25; letter-spacing: 1px; }
+        .void-transition-active { animation: textGlitchShake 0.12s infinite, screenFlashRed 0.25s infinite; }
+        @keyframes screenFlashRed { 0%, 100% { background-color: #000; } 50% { background-color: #220000; } }
 
-        /* Standard Base Chat Element styles */
+        /* Chat System Base Element Configuration */
         #chat-container { width: 400px; max-width: 90%; height: 650px; background-color: var(--container-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); position: relative; z-index: 5; }
         #chat-container.os-window-mode { position: absolute; height: 550px; z-index: 6; }
         #chat-container.running-around { position: absolute; transition: all 0.15s ease-out; }
@@ -402,36 +403,121 @@
         
         setTimeout(() => {
             root.innerHTML = `
-                <canvas id="maze-view-canvas" width="280" height="280"></canvas>
-                <p style="color:#660000; font-size:10px; margin-top:4px;">GUIDE CURSOR SAFELY TO GREEN SQUARE</p>
+                <canvas id="maze-view-canvas" width="280" height="280" tabindex="1"></canvas>
+                <p style="color:#660000; font-size:10px; margin-top:4px;">USE ARROWS TO CONTROL THE RED DOT TO THE GREEN SQUARE</p>
             `;
             const canvas = document.getElementById('maze-view-canvas');
             const ctx = canvas.getContext('2d');
+            canvas.focus();
             
-            let player = { x: 15, y: 15 };
-            let enemy = { x: 260, y: 260 };
+            let player = { x: 15, y: 15, size: 4.5 };
+            let enemy = { x: 265, y: 265, size: 6 }; 
+            let keys = {};
             let gameActive = true;
 
+            // Expanded Maze Configuration Layout Structure
             const walls = [
-                {x: 40, y: 0, w: 15, h: 200}, {x: 95, y: 80, w: 15, h: 200},
-                {x: 150, y: 0, w: 15, h: 180}, {x: 210, y: 100, w: 15, h: 180},
-                {x: 40, y: 230, w: 120, h: 15}, {x: 150, y: 40, w: 100, h: 15}
+                {x: 40, y: 0, w: 12, h: 100}, {x: 40, y: 130, w: 12, h: 110},
+                {x: 85, y: 40, w: 12, h: 150}, {x: 130, y: 0, w: 12, h: 90},
+                {x: 130, y: 120, w: 12, h: 120}, {x: 175, y: 50, w: 12, h: 180},
+                {x: 220, y: 0, w: 12, h: 110}, {x: 220, y: 140, w: 12, h: 100},
+                {x: 0, y: 240, w: 100, h: 12}, {x: 130, y: 240, w: 110, h: 12},
+                {x: 85, y: 40, w: 90, h: 12}, {x: 175, y: 120, w: 50, h: 12}
             ];
 
-            canvas.onmousemove = (e) => {
-                if(!gameActive) return;
-                const rect = canvas.getBoundingClientRect();
-                player.x = e.clientX - rect.left; player.y = e.clientY - rect.top;
+            window.addEventListener('keydown', (e) => { if(gameActive && [37,38,39,40].includes(e.keyCode)) { e.preventDefault(); keys[e.keyCode] = true; } });
+            window.addEventListener('keyup', (e) => { if([37,38,39,40].includes(e.keyCode)) keys[e.keyCode] = false; });
 
-                // Wall Collision detection
-                walls.forEach(w => {
-                    if(player.x > w.x && player.x < w.x+w.w && player.y > w.y && player.y < w.y+w.h) {
-                        triggerGameOver();
+            function checkCollision(nx, ny, size) {
+                if (nx - size < 0 || nx + size > canvas.width || ny - size < 0 || ny + size > canvas.height) return true;
+                for(let w of walls) {
+                    if (nx + size > w.x && nx - size < w.x + w.w && ny + size > w.y && ny - size < w.y + w.h) return true;
+                }
+                return false;
+            }
+
+            function triggerFullscreenVoid() {
+                gameActive = false;
+                let voidContainer = document.createElement('div');
+                voidContainer.className = 'void-screen-fullscreen void-transition-active';
+                document.body.appendChild(voidContainer);
+
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                let transitionTimer = 0;
+
+                function renderVoidLoop() {
+                    let screenText = "";
+                    let rows = Math.floor(window.innerHeight / 22);
+                    let cols = Math.floor(window.innerWidth / 155);
+
+                    if (transitionTimer < 150) { 
+                        transitionTimer++;
+                        // Chaotic glitch transition noise array configuration phase
+                        for(let r=0; r<rows; r++) {
+                            screenText += Math.random().toString(36).substring(2, 22).toUpperCase() + "   ".repeat(Math.floor(Math.random()*3)) + "\n";
+                        }
+                        if (transitionTimer === 150) {
+                            voidContainer.classList.remove('void-transition-active');
+                        }
+                    } else {
+                        // Permanent infinitely scrolling pristine columns sequence mode
+                        for(let r=0; r<rows; r++) {
+                            let line = "";
+                            for(let c=0; c<cols; c++) {
+                                let word = "";
+                                for(let i=0; i<20; i++) word += chars.charAt(Math.floor(Math.random()*chars.length));
+                                line += word + "     ";
+                            }
+                            screenText += line + "\n";
+                        }
                     }
-                });
+                    voidContainer.innerText = screenText;
+                    requestAnimationFrame(renderVoidLoop);
+                }
+                renderVoidLoop();
+            }
 
-                // Win logic goal checked
-                if(player.x > 250 && player.y > 250) {
+            function updateChaseLoop() {
+                if(!gameActive) return;
+
+                let pSpeed = 1.45;
+                let nextX = player.x;
+                let nextY = player.y;
+
+                if (keys[37]) nextX -= pSpeed;
+                if (keys[39]) nextX += pSpeed;
+                if (!checkCollision(nextX, player.y, player.size)) player.x = nextX;
+
+                if (keys[38]) nextY -= pSpeed;
+                if (keys[40]) nextY += pSpeed;
+                if (!checkCollision(player.x, nextY, player.size)) player.y = nextY;
+
+                // Pathfinding Enemy Artificial Intelligence Logic
+                let eSpeed = 0.90;
+                let targetDx = player.x - enemy.x;
+                let targetDy = player.y - enemy.y;
+                let dist = Math.sqrt(targetDx*targetDx + targetDy*targetDy);
+
+                let moveX = (targetDx / dist) * eSpeed;
+                let moveY = (targetDy / dist) * eSpeed;
+
+                // Wall-sliding avoidance check mechanics
+                if (checkCollision(enemy.x + moveX, enemy.y + moveY, enemy.size)) {
+                    if (!checkCollision(enemy.x + moveX, enemy.y, enemy.size)) {
+                        moveY = 0;
+                    } else if (!checkCollision(enemy.x, enemy.y + moveY, enemy.size)) {
+                        moveX = 0;
+                    } else {
+                        moveX = -moveX; moveY = -moveY;
+                    }
+                }
+
+                enemy.x += moveX;
+                enemy.y += moveY;
+
+                if(dist < (player.size + enemy.size)) { triggerFullscreenVoid(); return; }
+
+                if(player.x > 255 && player.y > 255) {
                     gameActive = false;
                     const bypassCode = Math.floor(100000 + Math.random() * 900000);
                     root.innerHTML = `
@@ -440,29 +526,14 @@
                             <p style="font-size:11px; color:#88ff88;">OVERRIDE CODE COMPROMISED:</p>
                             <h2 style="font-size:32px; letter-spacing:4px; margin:10px 0; background:#002200; border:1px dashed #00ff00;">${bypassCode}</h2>
                         </div>`;
+                    return;
                 }
-            };
-
-            function triggerGameOver() {
-                gameActive = false;
-                let voidDiv = document.createElement('div');
-                voidDiv.className = 'void-screen'; voidDiv.innerText = 'THE VOID';
-                root.appendChild(voidDiv);
-            }
-
-            function updateChaseLoop() {
-                if(!gameActive) return;
-                let dx = player.x - enemy.x; let dy = player.y - enemy.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist > 0) { enemy.x += (dx/dist)*1.15; enemy.y += (dy/dist)*1.15; }
-
-                if(dist < 12) { triggerGameOver(); return; }
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#220000'; walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
-                ctx.fillStyle = '#00ff00'; ctx.fillRect(255, 255, 20, 20); // Goal
-                ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(enemy.x, enemy.y, 6, 0, Math.PI*2); ctx.fill(); // Enemy
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(player.x, player.y, 4, 0, Math.PI*2); ctx.fill(); // Player
+                ctx.fillStyle = '#2a0505'; walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+                ctx.fillStyle = '#00ff00'; ctx.fillRect(255, 255, 25, 25); 
+                ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = '#ff1111'; ctx.beginPath(); ctx.arc(player.x, player.y, player.size, 0, Math.PI*2); ctx.fill(); 
 
                 requestAnimationFrame(updateChaseLoop);
             }
@@ -560,7 +631,6 @@
                 const desktop = document.getElementById('desktop-environment');
                 desktop.style.display = 'flex';
                 
-                // Generated Application Nodes including new "Secret" system shortcut binary
                 desktop.innerHTML = [0,1,2,3].map(i => `
                     <div class="desktop-icon" onclick="openLogFile(${i})">
                         <div class="desktop-icon-img">${i===3?'⚠️':'📄'}</div>
