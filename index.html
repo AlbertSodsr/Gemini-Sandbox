@@ -240,6 +240,14 @@
             background-color: #020202 !important;
             border-color: #ff3333 !important;
             box-shadow: 0 0 25px rgba(255, 0, 0, 0.2);
+            /* Fullscreen configuration */
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0px !important;
+            z-index: 290000 !important;
         }
         .terminal-content {
             background-color: #000000 !important;
@@ -250,7 +258,7 @@
             display: flex;
             background: #000;
             border-top: 1px solid #ff3333;
-            padding: 8px;
+            padding: 12px;
         }
         .terminal-prompt {
             color: #ff3333;
@@ -396,7 +404,7 @@
         { plain: "unlinked exception", morse: "..- -. .-.. .. -. -.- . -..   . -..- -.-. . .--. - .. --- -." },
         { plain: "stuck in darkness", morse: "... - ..- -.-. -.-   .. -.   -.. .- .-. -.- -. . ... ..." },
         { plain: "stop trying", morse: "... - --- .--.   - .-. -.-- .. -. --." },
-        { plain: "no analytical path", morse: "-. ---   .- -. .- .-.. -.-- - .. -.-. .- .-..   .-- .- - ...." },
+        { plain: "no analytical path", morse: "-. ---   .- -. .- .-.. -.-- - .. -.-. .- .-..   .-- .- + ...." },
         { plain: "the door is locked", morse: "- .... .   -.. --- --- .-.   .. ...   .-.. --- -.-. -.- . -.." },
         { plain: "memory corrupt", morse: "-- . -- --- .-. -.--   -.-. --- .-. .-. ..- .--. -" },
         { plain: "is anyone there", morse: ".. ...   .- -. -.-- --- -. .   - .... . .-. ." }
@@ -512,6 +520,8 @@
         const header = el.querySelector('.os-window-header') || el.querySelector('#chat-header') || el;
         header.onmousedown = (e) => {
             if(['BUTTON','SELECT','INPUT'].includes(e.target.tagName)) return;
+            // Prevent dragging if the window is forced into full screen mode
+            if (el.classList.contains('terminal-container')) return;
             e.preventDefault();
             p3 = e.clientX; p4 = e.clientY;
             document.onmouseup = () => document.onmouseup = document.onmousemove = null;
@@ -599,8 +609,9 @@
             const ctx = canvas.getContext('2d');
             canvas.focus();
             
+            // Balanced configurations: Match character sizes and slow down enemy speed
             let player = { x: 15, y: 15, size: 5 };
-            let enemy = { x: 185, y: 185, size: 6 };
+            let enemy = { x: 185, y: 185, size: 5 }; 
             let keys = {};
             let gameActive = true;
 
@@ -676,7 +687,8 @@
                 if (keys[40]) nextY += pSpeed;
                 if (!checkCollision(player.x, nextY, player.size)) player.y = nextY;
 
-                let eSpeed = 0.95;
+                // Lower velocity multiplier for a slower, more manageable entity pathing profile
+                let eSpeed = 0.55; 
                 let targetDx = player.x - enemy.x; let targetDy = player.y - enemy.y;
                 let dist = Math.sqrt(targetDx*targetDx + targetDy*targetDy);
 
@@ -807,7 +819,6 @@
             if (e.key === 'Enter') {
                 let val = e.target.value.trim().toLowerCase();
                 
-                // Check if code matches the calculated secret code or custom override command
                 if (latestGeneratedSecretCode && val === latestGeneratedSecretCode) {
                     document.getElementById('room-content').style.opacity = '0';
                     setTimeout(() => {
@@ -828,19 +839,18 @@
     };
 
     function openTerminalChatbox(parentOverlay) {
-        // Play audio element
         audioTerminal.currentTime = 0;
         audioTerminal.play().catch(err => console.log("Audio block context anomaly.", err));
 
+        // Fullscreen layout configuration - Close mechanisms completely excluded to block any breakout requests
         parentOverlay.innerHTML = `
-            <div id="sub-terminal-window" class="os-window terminal-container" style="width: 480px; height: 380px; position: relative; display: flex; flex-direction: column;">
+            <div id="sub-terminal-window" class="os-window terminal-container" style="display: flex; flex-direction: column;">
                 <div class="os-window-header" style="background: #111; border-bottom: 1px solid #ff3333; color: #ff3333;">
-                    <span>Secure Sub-Terminal Shell</span>
-                    <button class="os-close-btn" onclick="document.getElementById('audio-terminal').pause(); this.closest('#dark-room-overlay').remove();"></button>
-                </div>
-                <div id="terminal-screen" class="os-window-content terminal-content" style="flex: 1; padding: 12px; font-size: 12px; overflow-y: auto;">
-                    <p style="color: #661111;">[CONNECTED TO DEEP CONTEXT THREAD]</p>
-                    <p style="color: #882222; margin-bottom: 10px;">Type structural entries to receive unlinked telemetry.</p>
+                    <span>Secure Sub-Terminal Shell [UNBREAKABLE LATCH]</span>
+                    </div>
+                <div id="terminal-screen" class="os-window-content terminal-content" style="flex: 1; padding: 15px; font-size: 13px; overflow-y: auto;">
+                    <p style="color: #661111;">[CONNECTED TO DEEP CONTEXT THREAD - SANDBOX LOCK ACTIVE]</p>
+                    <p style="color: #882222; margin-bottom: 10px;">The runtime interface window is sealed. Escape vectors are disabled.</p>
                 </div>
                 <div class="terminal-input-wrapper">
                     <span class="terminal-prompt">root@void_sub:~#</span>
@@ -857,13 +867,11 @@
                 let text = termInput.value.trim();
                 if (!text) return;
 
-                // Echo request
                 let userLine = document.createElement('p');
                 userLine.innerHTML = `<span style="color: #aa3333;">&gt; ${text}</span>`;
                 termScreen.appendChild(userLine);
                 termInput.value = '';
 
-                // Pre-generated choice random engine selection trigger
                 setTimeout(() => {
                     let randomItem = terminalReplies[Math.floor(Math.random() * terminalReplies.length)];
                     let responseLine = document.createElement('p');
