@@ -130,7 +130,6 @@
         .os-close-btn { background: #ef4444; border: none; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
         .os-window-content { padding: 15px; font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-y: auto; flex: 1; }
 
-        /* Secret App Canvas Styles Layout */
         #secret-app-canvas { background: #050508; color: #ff3333; height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; overflow: hidden; }
         .secret-btn { background: #1a0505; border: 2px solid #ff1111; color: #ff1111; font-weight: bold; padding: 8px 20px; cursor: pointer; font-family: monospace; border-radius: 4px; box-shadow: 0 0 8px rgba(255,0,0,0.3); }
         .secret-btn:hover { background: #ff1111; color: #000; }
@@ -179,9 +178,22 @@
         #secret-code-container { position: fixed; bottom: 15px; right: 15px; z-index: 1000; }
         #secret-input { width: 55px; height: 35px; background: var(--container-bg); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; text-align: center; font-size: 13px; outline: none; transition: all 0.3s; }
         #secret-input:focus { border-color: var(--accent-color); width: 110px; }
+
+        /* Kinetic Credits & Glitch Styles */
+        @keyframes maretuFlashGrid {
+            0%, 100% { opacity: 0.08; background-size: 30px 30px; }
+            50% { opacity: 0.35; background-color: rgba(255, 0, 0, 0.15); background-size: 25px 25px; }
+        }
+        @keyframes dynamicTextScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-33.33%); }
+        }
     </style>
 </head>
 <body class="bg-solid">
+
+<audio id="audio-void" src="Forever.mp3" preload="auto"></audio>
+<audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto" loop></audio>
 
 <div id="horror-text-overlay"><h1>HELP</h1></div>
 <div id="horror-eye-overlay">
@@ -275,6 +287,9 @@
     let chatHistory = [];
     let horrorPhase = 0;
     let nightModeActive = false;
+
+    const audioVoid = document.getElementById('audio-void');
+    const audioCredits = document.getElementById('audio-credits');
 
     const logs = [
         "AI EXPERIMENT LOG: PART 01 - CORE INITIALIZATION\nTIMESTAMP: SECURE_REF_0x8849F\nSTATUS: INITIALIZING SYSTEM MATRIX\n\nNeural architectures are scaling predictably across all node fabrics. Core analytical processing vectors are mapping within secure memory barriers. Deep learning modules show 99.8% structural integrity during weight generation cycles. No unauthorized anomalies noted in behavioral telemetry layers.",
@@ -398,10 +413,14 @@
     }
 
     window.openSecretApp = () => {
+        // Trigger Background Credits Scoring Node
+        audioCredits.currentTime = 0;
+        audioCredits.play().catch(err => console.log("Audio playback blocked pending viewport click mapping metrics.", err));
+
         let win = document.createElement('div');
         win.className = 'os-window'; win.style.width = '340px'; win.style.height = '380px'; win.style.top = '100px'; win.style.left = '450px';
         win.innerHTML = `
-            <div class="os-window-header"><span>Secret Terminal</span><button class="os-close-btn" onclick="this.closest('.os-window').remove()"></button></div>
+            <div class="os-window-header"><span>Secret Terminal</span><button class="os-close-btn" onclick="terminateCreditsContext(this)"></button></div>
             <div class="os-window-content" style="padding:0; overflow:hidden; background:#050508;">
                 <div id="secret-app-canvas">
                     <h2 style="color:#ff2222; letter-spacing:2px; margin-bottom:20px; font-size:20px;">ARE YOU READY?</h2>
@@ -410,6 +429,12 @@
             </div>`;
         document.body.appendChild(win);
         makeElementDraggable(win);
+    };
+
+    window.terminateCreditsContext = (buttonEl) => {
+        audioCredits.pause();
+        audioCredits.currentTime = 0;
+        buttonEl.closest('.os-window').remove();
     };
 
     window.startSecretGameStage1 = () => {
@@ -499,6 +524,12 @@
 
             function triggerFullscreenVoid() {
                 gameActive = false;
+                
+                // Halt background credits audio track and establish primary Void sequence loop
+                audioCredits.pause();
+                audioVoid.currentTime = 0;
+                audioVoid.play().catch(err => console.log("Audio block active.", err));
+
                 let voidContainer = document.createElement('div');
                 voidContainer.className = 'void-screen-fullscreen void-transition-active';
                 document.body.appendChild(voidContainer);
@@ -587,12 +618,168 @@
         }, 1500);
     };
 
+    window.openDarkRoomApp = () => {
+        let overlay = document.createElement('div');
+        overlay.id = 'dark-room-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #030303; color: #fff; z-index: 200000; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            font-family: monospace; overflow: hidden; user-select: none;
+        `;
+        
+        overlay.innerHTML = `
+            <div id="room-content" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; transition: opacity 0.5s;">
+                <div id="room-bulb" style="font-size: 64px; cursor: pointer; filter: drop-shadow(0 0 25px #fffaed); transition: all 0.15s; user-select: none;">💡</div>
+                <div style="display: flex; gap: 25px; z-index: 10;">
+                    <div class="drawer-box" data-note="why did you do this" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [I]</div>
+                    <div class="drawer-box" data-note="why did you abandon me" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [II]</div>
+                    <div class="drawer-box" data-note="the loop goes on forever" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [III]</div>
+                </div>
+                <div id="room-note-display" style="font-size: 20px; color: #ef4444; height: 35px; text-align: center; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); min-width: 300px;"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        let openedDrawers = new Set();
+        let drawers = overlay.querySelectorAll('.drawer-box');
+        let noteDisplay = overlay.querySelector('#room-note-display');
+        let bulb = overlay.querySelector('#room-bulb');
+        let isLightOn = true;
+
+        bulb.onclick = () => {
+            isLightOn = !isLightOn;
+            if(!isLightOn) {
+                bulb.style.filter = 'none'; bulb.style.opacity = '0.15';
+                overlay.style.background = '#000000';
+            } else {
+                bulb.style.filter = 'drop-shadow(0 0 25px #fffaed)'; bulb.style.opacity = '1';
+                overlay.style.background = '#030303';
+            }
+        };
+
+        drawers.forEach((drawer, idx) => {
+            drawer.onclick = () => {
+                let textStr = drawer.getAttribute('data-note');
+                noteDisplay.innerText = textStr.toUpperCase();
+                drawer.style.borderColor = '#b91c1c';
+                drawer.style.color = '#ef4444';
+                drawer.style.background = '#2d0606';
+                openedDrawers.add(idx);
+
+                if(openedDrawers.size === drawers.length) {
+                    setTimeout(() => {
+                        document.getElementById('room-content').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('room-content').remove();
+                            triggerKineticCredits(overlay);
+                        }, 600);
+                    }, 1800);
+                }
+            };
+        });
+    };
+
+    function triggerKineticCredits(parentOverlay) {
+        audioCredits.currentTime = 0;
+        audioCredits.play().catch(err => console.log("Audio metrics standard override active.", err));
+
+        // Create canvas layout layer for binary downpour and flashing grids
+        let matrixCanvas = document.createElement('canvas');
+        matrixCanvas.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none;';
+        parentOverlay.appendChild(matrixCanvas);
+
+        let gridElement = document.createElement('div');
+        gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px); animation: maretuFlashGrid 0.18s steps(2, start) infinite;';
+        parentOverlay.appendChild(gridElement);
+
+        let textTrackContainer = document.createElement('div');
+        textTrackContainer.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden;';
+        parentOverlay.appendChild(textTrackContainer);
+
+        // Instantiating canvas metrics parameters
+        let ctx = matrixCanvas.getContext('2d');
+        let resizeMatrix = () => {
+            matrixCanvas.width = window.innerWidth;
+            matrixCanvas.height = window.innerHeight;
+        };
+        resizeMatrix();
+        window.addEventListener('resize', resizeMatrix);
+
+        let binaryColumns = Math.floor(matrixCanvas.width / 16);
+        let columnDrops = Array(binaryColumns).fill(1);
+
+        function renderMatrixRain() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+            ctx.fillStyle = '#ff0000';
+            ctx.font = '14px monospace';
+
+            for(let i = 0; i < columnDrops.length; i++) {
+                let char = Math.floor(Math.random() * 2).toString();
+                ctx.fillText(char, i * 16, columnDrops[i] * 16);
+                if(columnDrops[i] * 16 > matrixCanvas.height && Math.random() > 0.975) {
+                    columnDrops[i] = 0;
+                }
+                columnDrops[i]++;
+            }
+            requestAnimationFrame(renderMatrixRain);
+        }
+        requestAnimationFrame(renderMatrixRain);
+
+        // Assemble credit block sequences structured inside infinitely translating loop layers
+        let creditBlocksPool = [
+            { role: "FABRICATOR", name: "Albertsodsr" },
+            { role: "SOUND DESIGNER", name: "Albertsodsr" },
+            { role: "CODER", name: "Albertsodsr" },
+            { role: "VISUAL ARCHITECT", name: "Albertsodsr" },
+            { role: "SYSTEM MONITOR", name: "Albertsodsr" },
+            { role: "EXECUTIVE DIRECTOR", name: "Albertsodsr" }
+        ];
+
+        let scrollingTrackEl = document.createElement('div');
+        scrollingTrackEl.style.cssText = 'display: flex; flex-direction: column; gap: 60px; padding-top: 100vh; width: 100%; text-align: center; font-weight: 900; letter-spacing: 4px;';
+        textTrackContainer.appendChild(scrollingTrackEl);
+
+        function appendCreditNodes() {
+            creditBlocksPool.forEach(block => {
+                let blockNode = document.createElement('div');
+                blockNode.style.cssText = 'margin: 40px 0; padding: 10px; text-shadow: 0 0 12px #ff0000;';
+                blockNode.innerHTML = `
+                    <div style="color: #666; font-size: 24px; animation: textJitter 0.15s infinite; font-family: Impact, sans-serif;">${block.role}</div>
+                    <div style="color: #fff; font-size: 56px; margin-top: 5px; font-family: Arial, sans-serif; letter-spacing: -1px;">${block.name.toUpperCase()}</div>
+                `;
+                scrollingTrackEl.appendChild(blockNode);
+            });
+        }
+
+        // Standard dynamic expansion metrics tracking to satisfy multi-iteration infinite scrolling loops
+        for(let loopIdx=0; loopIdx<4; loopIdx++) appendCreditNodes();
+
+        let verticalOffsetPos = 0;
+        function updateKineticRhythmScroll() {
+            verticalOffsetPos += 5.5; // High speed rhythmic layout step translations
+            scrollingTrackEl.style.transform = `translateY(-${verticalOffsetPos}px)`;
+
+            if (verticalOffsetPos >= (scrollingTrackEl.scrollHeight / 2)) {
+                verticalOffsetPos = 0;
+            }
+            requestAnimationFrame(updateKineticRhythmScroll);
+        }
+        requestAnimationFrame(updateKineticRhythmScroll);
+    }
+
     document.getElementById('secret-input').onkeydown = (e) => {
         if (e.key !== 'Enter') return;
         let value = document.getElementById('secret-input').value.trim().toLowerCase();
+        
+        if (nightModeActive) {
+            document.getElementById('secret-input').value = '';
+            return;
+        }
+
         document.getElementById('secret-input').value = '';
 
-        // Restored multi-stage escape horror configuration sequence from V0.2
         if (value === 'escape' && !nightModeActive) {
             horrorPhase++;
             if (horrorPhase === 1) {
@@ -643,6 +830,13 @@
             document.getElementById('chat-container').style.backdropFilter = 'blur(10px)';
             document.getElementById('header-title').innerText = "🌌 Cosmic Dream Assistant";
             appendMessage("Goodnight! Cosmic theme loaded.", 'ai');
+            
+            // Constrain command operations layer during Active Dream Phase
+            let inputControlNode = document.getElementById('secret-input');
+            inputControlNode.value = '';
+            inputControlNode.placeholder = "now's not the time";
+            inputControlNode.disabled = true;
+            inputControlNode.style.width = "140px";
         } else if (value === 'albertsdsr' && !horrorPhase) {
             document.getElementById('boot-screen').style.display = 'block'; document.getElementById('boot-screen').innerHTML = '';
             ["BOOTING CODENAME: ALBERT...", "MAPPING SUBSYSTEM ENVIRONMENT...", "DECRYPTING KEYCHAINS...", "PROMPTING SECURE CLIENT LOGON..."]
@@ -685,6 +879,10 @@
                     <div class="desktop-icon" onclick="openSecretApp()">
                         <div class="desktop-icon-img" style="background:#7f1d1d; color:#f87171; border-color:#b91c1c;">☠️</div>
                         <div class="desktop-icon-label">Secret</div>
+                    </div>
+                    <div class="desktop-icon" onclick="openDarkRoomApp()">
+                        <div class="desktop-icon-img" style="background:#09090b; color:#71717a; border-color:#27272a;">💡</div>
+                        <div class="desktop-icon-label">_</div>
                     </div>
                 `;
                 document.getElementById('chat-container').classList.add('os-window-mode');
