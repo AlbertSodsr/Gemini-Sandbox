@@ -130,7 +130,8 @@
         .os-close-btn { background: #ef4444; border: none; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
         .os-window-content { padding: 15px; font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-y: auto; flex: 1; }
 
-        #secret-app-canvas { background: #050508; color: #ff3333; height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; overflow: hidden; }
+        #secret-app-fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #050508; color: #ff3333; z-index: 250000; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; overflow: hidden; }
+        #secret-app-canvas { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .secret-btn { background: #1a0505; border: 2px solid #ff1111; color: #ff1111; font-weight: bold; padding: 8px 20px; cursor: pointer; font-family: monospace; border-radius: 4px; box-shadow: 0 0 8px rgba(255,0,0,0.3); }
         .secret-btn:hover { background: #ff1111; color: #000; }
         .doors-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px; width: 100%; max-width: 280px; }
@@ -139,7 +140,7 @@
         .heart-wrapper { font-size: 20px; font-weight: bold; cursor: pointer; text-align: center; white-space: pre; line-height: 1.1; user-select: none; filter: drop-shadow(0 0 10px #ff0000); transform: scale(1); transition: transform 0.1s; }
         .heart-wrapper:active { transform: scale(0.92); }
         #maze-view-canvas { border: 2px solid #ff1111; background: #000; display: block; margin: 0 auto; outline: none; }
-        .void-screen-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #555; font-size: 14px; z-index: 100000; overflow: hidden; padding: 15px; font-family: monospace; white-space: pre; line-height: 1.25; letter-spacing: 1px; }
+        .void-screen-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #555; font-size: 14px; z-index: 300000; overflow: hidden; padding: 15px; font-family: monospace; white-space: pre; line-height: 1.25; letter-spacing: 1px; }
         .void-transition-active { animation: textJitter 0.12s infinite, screenFlashRed 0.25s infinite; }
         @keyframes screenFlashRed { 0%, 100% { background-color: #000; } 50% { background-color: #220000; } }
 
@@ -179,7 +180,7 @@
         #secret-input { width: 55px; height: 35px; background: var(--container-bg); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; text-align: center; font-size: 13px; outline: none; transition: all 0.3s; }
         #secret-input:focus { border-color: var(--accent-color); width: 110px; }
 
-        /* Advanced Dark Room & Kinetic Credit System Styles */
+        /* Dark Room & Kinetic Credit System Styles */
         @keyframes bulbFlicker {
             0%, 100% { opacity: 0.95; filter: drop-shadow(0 0 30px #fffaed); }
             3.2% { opacity: 0.15; filter: drop-shadow(0 0 2px rgba(255,250,237,0.1)); }
@@ -228,11 +229,15 @@
             0%, 89%, 91.5%, 100% { opacity: 0; }
             90%, 91% { opacity: 0.25; }
         }
+
+        #poweroff-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #fff;
+            font-family: monospace; padding: 40px; z-index: 500000; display: none; overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-solid">
 
-<!-- Audio Pipeline Configuration Elements -->
 <audio id="audio-void" src="Forever.mp3" preload="auto"></audio>
 <audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto" loop></audio>
 
@@ -251,9 +256,23 @@
 </div>
 <div id="desktop-environment"></div>
 
+<div id="secret-app-fullscreen-overlay">
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 260000;">
+        <button class="secret-btn" onclick="closeFullscreenSecretApp()">✕ CLOSE</button>
+    </div>
+    <div id="secret-app-canvas">
+        <h2 style="color:#ff2222; letter-spacing:2px; margin-bottom:20px; font-size:20px;">ARE YOU READY?</h2>
+        <button class="secret-btn" onclick="startSecretGameStage1()">START</button>
+    </div>
+</div>
+
 <div id="crash-overlay">
     <p>*** FATAL EXCEPTION ***</p>
     <div id="crash-log-box" style="margin-top:15px;"></div>
+</div>
+
+<div id="poweroff-overlay">
+    <div id="poweroff-log-box" style="line-height: 1.6; white-space: pre-wrap;"></div>
 </div>
 
 <div id="disclaimer-modal" class="modal-overlay">
@@ -454,27 +473,18 @@
     }
 
     window.openSecretApp = () => {
-        audioCredits.currentTime = 0;
-        audioCredits.play().catch(err => console.log("Audio playback blocked pending viewport click mapping metrics.", err));
-
-        let win = document.createElement('div');
-        win.className = 'os-window'; win.style.width = '340px'; win.style.height = '380px'; win.style.top = '100px'; win.style.left = '450px';
-        win.innerHTML = `
-            <div class="os-window-header"><span>Secret Terminal</span><button class="os-close-btn" onclick="terminateCreditsContext(this)"></button></div>
-            <div class="os-window-content" style="padding:0; overflow:hidden; background:#050508;">
-                <div id="secret-app-canvas">
-                    <h2 style="color:#ff2222; letter-spacing:2px; margin-bottom:20px; font-size:20px;">ARE YOU READY?</h2>
-                    <button class="secret-btn" onclick="startSecretGameStage1()">START</button>
-                </div>
-            </div>`;
-        document.body.appendChild(win);
-        makeElementDraggable(win);
+        const secretOverlay = document.getElementById('secret-app-fullscreen-overlay');
+        secretOverlay.style.display = 'flex';
+        
+        // Reset canvas to standard setup interface state
+        document.getElementById('secret-app-canvas').innerHTML = `
+            <h2 style="color:#ff2222; letter-spacing:2px; margin-bottom:20px; font-size:20px;">ARE YOU READY?</h2>
+            <button class="secret-btn" onclick="startSecretGameStage1()">START</button>
+        `;
     };
 
-    window.terminateCreditsContext = (buttonEl) => {
-        audioCredits.pause();
-        audioCredits.currentTime = 0;
-        buttonEl.closest('.os-window').remove();
+    window.closeFullscreenSecretApp = () => {
+        document.getElementById('secret-app-fullscreen-overlay').style.display = 'none';
     };
 
     window.startSecretGameStage1 = () => {
@@ -564,8 +574,8 @@
 
             function triggerFullscreenVoid() {
                 gameActive = false;
+                closeFullscreenSecretApp();
                 
-                audioCredits.pause();
                 audioVoid.currentTime = 0;
                 audioVoid.play().catch(err => console.log("Audio block active.", err));
 
@@ -762,9 +772,8 @@
 
     function triggerKineticCredits(parentOverlay) {
         audioCredits.currentTime = 0;
-        audioCredits.play().catch(err => console.log("Audio pipeline configuration metric exception.", err));
+        audioCredits.play().catch(err => console.log("Audio pipeline exception.", err));
 
-        // Background visual layout mechanics layer initialization
         let matrixCanvas = document.createElement('canvas');
         matrixCanvas.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none;';
         parentOverlay.appendChild(matrixCanvas);
@@ -773,7 +782,6 @@
         gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px); animation: maretuFlashGrid 0.15s steps(2, start) infinite;';
         parentOverlay.appendChild(gridElement);
 
-        // Core dynamic glitch tracking wrapper
         let fxWrapper = document.createElement('div');
         fxWrapper.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden; animation: creditBlurGlitch 3.5s infinite direct, creditShakeGlitch 2.8s infinite discrete;';
         parentOverlay.appendChild(fxWrapper);
@@ -812,7 +820,6 @@
         }
         requestAnimationFrame(renderMatrixRain);
 
-        // Multi-tier expanded structural credits definitions matrix mapping layout dependencies
         let creditBlocksPool = [
             { role: "FABRICATOR", name: "Albertsodsr" },
             { role: "SOUND DESIGNER", name: "Albertsodsr" },
@@ -841,19 +848,17 @@
             });
         }
 
-        // Generate infinite pool segments loops tracking structure thresholds
         for(let loopIdx=0; loopIdx<4; loopIdx++) appendCreditNodes();
 
         let verticalOffsetPos = 0;
         let lastTimestamp = 0;
-        const scrollVelocitySpeed = 0.28; // Linear pixel delta tracking step translation matrix
+        const scrollVelocitySpeed = 0.28;
 
         function updateKineticRhythmScroll(timestamp) {
             if (!lastTimestamp) lastTimestamp = timestamp;
             let delta = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
 
-            // Enforcing frame-rate agnostic smooth float tracking delta steps
             verticalOffsetPos += scrollVelocitySpeed * (delta > 0 ? delta : 16.66);
             scrollingTrackEl.style.transform = `translate3d(0, -${verticalOffsetPos}px, 0)`;
 
@@ -864,6 +869,57 @@
         }
         requestAnimationFrame(updateKineticRhythmScroll);
     }
+
+    window.triggerPowerOffSequence = () => {
+        if (!confirm("Are you sure you want to return?")) return;
+
+        // Hide desktop ecosystem layer
+        document.getElementById('desktop-environment').style.display = 'none';
+        
+        // Bring up shutdown tracking view screen log box
+        const powerOverlay = document.getElementById('poweroff-overlay');
+        const logBox = document.getElementById('poweroff-log-box');
+        powerOverlay.style.display = 'block';
+        logBox.innerHTML = '';
+
+        const shutdownLogs = [
+            "SIGNALLING TERM VECTOR TARGET ALL PROCESSORS...",
+            "UNMOUNTING ENCRYPTED VIRTUAL DIRECTORY HOOKS...",
+            "CLEARING CACHED INTERFACE STORAGE POOLS...",
+            "RELEASING DESKTOP GRAPHICS INSTANCES...",
+            "SHUTTING DOWN RUNTIME SECURITY ENGINES...",
+            "RECONFIGURING TERMINAL CORE TO DEFAULT CHAT MODE...",
+            "SYSTEM RESET COMPLETED SUCCESSFULLY."
+        ];
+
+        shutdownLogs.forEach((logLine, index) => {
+            setTimeout(() => {
+                const p = document.createElement('p');
+                p.innerText = `[${new Date().toLocaleTimeString()}] ${logLine}`;
+                logBox.appendChild(p);
+            }, index * 400);
+        });
+
+        setTimeout(() => {
+            // Hide power log screen
+            powerOverlay.style.display = 'none';
+            
+            // Re-initialize clear original AI layout configs environment
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.classList.remove('os-window-mode');
+            chatContainer.style.cssText = ''; 
+            chatContainer.style.display = 'flex';
+            
+            document.getElementById('header-title').innerText = "🌐 AI Personal Assistant";
+            
+            // Clean dynamic historical memory state records arrays
+            chatHistory = [];
+            document.getElementById('chat-box').innerHTML = '<div id="initial-ai-msg" class="message ai-message">Hello! I am your AI assistant. How can I help you today?</div>';
+            
+            // Reset input pass values
+            document.getElementById('os-password').value = '';
+        }, 3000);
+    };
 
     document.getElementById('secret-input').onkeydown = (e) => {
         if (e.key !== 'Enter') return;
@@ -963,6 +1019,11 @@
         if (e.key === 'Enter') {
             if (document.getElementById('os-password').value === '50884') {
                 document.getElementById('login-screen').style.display = 'none';
+                
+                // Automatically hide the chatbot upon loading desktop environment
+                document.getElementById('chat-container').style.display = 'none';
+                document.getElementById('chat-container').classList.add('os-window-mode');
+                
                 const desktop = document.getElementById('desktop-environment');
                 desktop.style.display = 'flex';
                 desktop.innerHTML = [0,1,2,3].map(i => `
@@ -979,11 +1040,11 @@
                         <div class="desktop-icon-img" style="background:#09090b; color:#71717a; border-color:#27272a;">💡</div>
                         <div class="desktop-icon-label">_</div>
                     </div>
+                    <div class="desktop-icon" onclick="triggerPowerOffSequence()">
+                        <div class="desktop-icon-img" style="background:#ef4444; color:#ffffff; border-color:#dc2626;">⏻</div>
+                        <div class="desktop-icon-label">Power Off</div>
+                    </div>
                 `;
-                document.getElementById('chat-container').classList.add('os-window-mode');
-                document.getElementById('chat-container').style.top = '100px'; document.getElementById('chat-container').style.left = '60px';
-                document.getElementById('header-title').innerText = "💬 ChatApp.exe";
-                makeElementDraggable(document.getElementById('chat-container'));
             } else {
                 document.getElementById('os-password').value = '';
                 document.getElementById('os-password').placeholder = "ACCESS DENIED";
