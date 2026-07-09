@@ -234,12 +234,45 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #fff;
             font-family: monospace; padding: 40px; z-index: 500000; display: none; overflow: hidden;
         }
+
+        /* Terminal Window Overrides */
+        .terminal-container {
+            background-color: #020202 !important;
+            border-color: #ff3333 !important;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.2);
+        }
+        .terminal-content {
+            background-color: #000000 !important;
+            color: #ff3333 !important;
+            font-family: 'Courier New', monospace;
+        }
+        .terminal-input-wrapper {
+            display: flex;
+            background: #000;
+            border-top: 1px solid #ff3333;
+            padding: 8px;
+        }
+        .terminal-prompt {
+            color: #ff3333;
+            font-family: 'Courier New', monospace;
+            padding-right: 8px;
+            font-weight: bold;
+        }
+        .terminal-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ff3333;
+            font-family: 'Courier New', monospace;
+            outline: none;
+        }
     </style>
 </head>
 <body class="bg-solid">
 
 <audio id="audio-void" src="Forever.mp3" preload="auto"></audio>
 <audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto" loop></audio>
+<audio id="audio-terminal" src="Expect.mp3" preload="auto" loop></audio>
 
 <div id="horror-text-overlay"><h1>HELP</h1></div>
 <div id="horror-eye-overlay">
@@ -347,9 +380,27 @@
     let chatHistory = [];
     let horrorPhase = 0;
     let nightModeActive = false;
+    let latestGeneratedSecretCode = null;
 
     const audioVoid = document.getElementById('audio-void');
     const audioCredits = document.getElementById('audio-credits');
+    const audioTerminal = document.getElementById('audio-terminal');
+
+    // 12 Morse Translated Pre-generated Responses Pool
+    const terminalReplies = [
+        { plain: "I can't help", morse: "..   -.-. .- -. -   .... . .-.. .--." },
+        { plain: "leave this place", morse: ".-.. . .- ...- .   - .... .. ...   .-- .-.. .- -.-. ." },
+        { plain: "nothing remains", morse: "-. --- - .... .. -. --.   .-. . -- .- .. -. ..." },
+        { plain: "system loop active", morse: "... -. ... - . --   .-.. --- --- .--.   .- -.-. - .. ...- ." },
+        { plain: "who are you", morse: ".-- .... ---   .- .-. .   -.-- --- ..-" },
+        { plain: "unlinked exception", morse: "..- -. .-.. .. -. -.- . -..   . -..- -.-. . .--. - .. --- -." },
+        { plain: "stuck in darkness", morse: "... - ..- -.-. -.-   .. -.   -.. .- .-. -.- -. . ... ..." },
+        { plain: "stop trying", morse: "... - --- .--.   - .-. -.-- .. -. --." },
+        { plain: "no analytical path", morse: "-. ---   .- -. .- .-.. -.-- - .. -.-. .- .-..   .-- .- - ...." },
+        { plain: "the door is locked", morse: "- .... .   -.. --- --- .-.   .. ...   .-.. --- -.-. -.- . -.." },
+        { plain: "memory corrupt", morse: "-- . -- --- .-. -.--   -.-. --- .-. .-. ..- .--. -" },
+        { plain: "is anyone there", morse: ".. ...   .- -. -.-- --- -. .   - .... . .-. ." }
+    ];
 
     const logs = [
         "AI EXPERIMENT LOG: PART 01 - CORE INITIALIZATION\nTIMESTAMP: SECURE_REF_0x8849F\nSTATUS: INITIALIZING SYSTEM MATRIX\n\nNeural architectures are scaling predictably across all node fabrics. Core analytical processing vectors are mapping within secure memory barriers. Deep learning modules show 99.8% structural integrity during weight generation cycles. No unauthorized anomalies noted in behavioral telemetry layers.",
@@ -475,8 +526,6 @@
     window.openSecretApp = () => {
         const secretOverlay = document.getElementById('secret-app-fullscreen-overlay');
         secretOverlay.style.display = 'flex';
-        
-        // Reset canvas to standard setup interface state
         document.getElementById('secret-app-canvas').innerHTML = `
             <h2 style="color:#ff2222; letter-spacing:2px; margin-bottom:20px; font-size:20px;">ARE YOU READY?</h2>
             <button class="secret-btn" onclick="startSecretGameStage1()">START</button>
@@ -645,12 +694,12 @@
 
                 if(player.x > 175 && player.y > 175) {
                     gameActive = false;
-                    const bypassCode = Math.floor(100000 + Math.random() * 900000);
+                    latestGeneratedSecretCode = Math.floor(100000 + Math.random() * 900000).toString();
                     root.innerHTML = `
                         <div style="text-align:center; color:#00ff00; padding:20px;">
                             <h3 style="font-size:14px; margin-bottom:10px;">MAZE BYPASS SUCCESS</h3>
                             <p style="font-size:11px; color:#88ff88;">OVERRIDE CODE COMPROMISED:</p>
-                            <h2 style="font-size:32px; letter-spacing:4px; margin:10px 0; background:#002200; border:1px dashed #00ff00;">${bypassCode}</h2>
+                            <h2 style="font-size:32px; letter-spacing:4px; margin:10px 0; background:#002200; border:1px dashed #00ff00;">${latestGeneratedSecretCode}</h2>
                         </div>`;
                     return;
                 }
@@ -696,7 +745,7 @@
                 </div>
                 <div id="parchment-view" class="parchment-paper"></div>
                 <div id="room-input-container" style="opacity: 0; pointer-events: none; transition: opacity 0.5s; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 20;">
-                    <p style="color: #555; font-size: 12px; letter-spacing: 2px;">ENTER COMMAND PROTOCOL</p>
+                    <p style="color: #555; font-size: 12px; letter-spacing: 2px;">ENTER PROTOCOL OR SECRET KEY</p>
                     <input type="text" id="room-terminal-input" style="background: #000; border: 1px solid #333; color: #ff3333; padding: 10px 15px; font-family: monospace; font-size: 16px; outline: none; border-radius: 4px; text-align: center; width: 260px; box-shadow: 0 0 15px rgba(255,0,0,0.15);" autocomplete="off">
                 </div>
             </div>
@@ -757,7 +806,15 @@
         document.getElementById('room-terminal-input').onkeydown = (e) => {
             if (e.key === 'Enter') {
                 let val = e.target.value.trim().toLowerCase();
-                if (val === 'escape') {
+                
+                // Check if code matches the calculated secret code or custom override command
+                if (latestGeneratedSecretCode && val === latestGeneratedSecretCode) {
+                    document.getElementById('room-content').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('room-content').remove();
+                        openTerminalChatbox(overlay);
+                    }, 500);
+                } else if (val === 'escape') {
                     document.getElementById('room-content').style.opacity = '0';
                     setTimeout(() => {
                         document.getElementById('room-content').remove();
@@ -769,6 +826,59 @@
             }
         };
     };
+
+    function openTerminalChatbox(parentOverlay) {
+        // Play audio element
+        audioTerminal.currentTime = 0;
+        audioTerminal.play().catch(err => console.log("Audio block context anomaly.", err));
+
+        parentOverlay.innerHTML = `
+            <div id="sub-terminal-window" class="os-window terminal-container" style="width: 480px; height: 380px; position: relative; display: flex; flex-direction: column;">
+                <div class="os-window-header" style="background: #111; border-bottom: 1px solid #ff3333; color: #ff3333;">
+                    <span>Secure Sub-Terminal Shell</span>
+                    <button class="os-close-btn" onclick="document.getElementById('audio-terminal').pause(); this.closest('#dark-room-overlay').remove();"></button>
+                </div>
+                <div id="terminal-screen" class="os-window-content terminal-content" style="flex: 1; padding: 12px; font-size: 12px; overflow-y: auto;">
+                    <p style="color: #661111;">[CONNECTED TO DEEP CONTEXT THREAD]</p>
+                    <p style="color: #882222; margin-bottom: 10px;">Type structural entries to receive unlinked telemetry.</p>
+                </div>
+                <div class="terminal-input-wrapper">
+                    <span class="terminal-prompt">root@void_sub:~#</span>
+                    <input type="text" id="terminal-field-input" class="terminal-field" autocomplete="off" autofocus>
+                </div>
+            </div>
+        `;
+
+        const termInput = document.getElementById('terminal-field-input');
+        const termScreen = document.getElementById('terminal-screen');
+
+        termInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                let text = termInput.value.trim();
+                if (!text) return;
+
+                // Echo request
+                let userLine = document.createElement('p');
+                userLine.innerHTML = `<span style="color: #aa3333;">&gt; ${text}</span>`;
+                termScreen.appendChild(userLine);
+                termInput.value = '';
+
+                // Pre-generated choice random engine selection trigger
+                setTimeout(() => {
+                    let randomItem = terminalReplies[Math.floor(Math.random() * terminalReplies.length)];
+                    let responseLine = document.createElement('p');
+                    responseLine.style.marginTop = "6px";
+                    responseLine.style.marginBottom = "6px";
+                    responseLine.innerHTML = `
+                        <span style="color: #ff5555; font-weight: bold;">[RESPONSE]:</span> ${randomItem.plain}<br>
+                        <span style="color: #884444; font-size: 11px;">[MORSE]: ${randomItem.morse}</span>
+                    `;
+                    termScreen.appendChild(responseLine);
+                    termScreen.scrollTop = termScreen.scrollHeight;
+                }, 300);
+            }
+        };
+    }
 
     function triggerKineticCredits(parentOverlay) {
         audioCredits.currentTime = 0;
@@ -872,11 +982,8 @@
 
     window.triggerPowerOffSequence = () => {
         if (!confirm("Are you sure you want to return?")) return;
-
-        // Hide desktop ecosystem layer
         document.getElementById('desktop-environment').style.display = 'none';
         
-        // Bring up shutdown tracking view screen log box
         const powerOverlay = document.getElementById('poweroff-overlay');
         const logBox = document.getElementById('poweroff-log-box');
         powerOverlay.style.display = 'block';
@@ -901,22 +1008,14 @@
         });
 
         setTimeout(() => {
-            // Hide power log screen
             powerOverlay.style.display = 'none';
-            
-            // Re-initialize clear original AI layout configs environment
             const chatContainer = document.getElementById('chat-container');
             chatContainer.classList.remove('os-window-mode');
             chatContainer.style.cssText = ''; 
             chatContainer.style.display = 'flex';
-            
             document.getElementById('header-title').innerText = "🌐 AI Personal Assistant";
-            
-            // Clean dynamic historical memory state records arrays
             chatHistory = [];
             document.getElementById('chat-box').innerHTML = '<div id="initial-ai-msg" class="message ai-message">Hello! I am your AI assistant. How can I help you today?</div>';
-            
-            // Reset input pass values
             document.getElementById('os-password').value = '';
         }, 3000);
     };
@@ -924,12 +1023,7 @@
     document.getElementById('secret-input').onkeydown = (e) => {
         if (e.key !== 'Enter') return;
         let value = document.getElementById('secret-input').value.trim().toLowerCase();
-        
-        if (nightModeActive) {
-            document.getElementById('secret-input').value = '';
-            return;
-        }
-
+        if (nightModeActive) { document.getElementById('secret-input').value = ''; return; }
         document.getElementById('secret-input').value = '';
 
         if (value === 'escape' && !nightModeActive) {
@@ -938,7 +1032,6 @@
                 triggerTransientGlitches();
                 setTimeout(loopRandomSpookyArtifacts, 500);
                 document.body.className = 'horror-active';
-                
                 const root = document.documentElement;
                 root.style.setProperty('--accent-color', '#800000');
                 root.style.setProperty('--container-bg', '#0d0202');
@@ -1019,8 +1112,6 @@
         if (e.key === 'Enter') {
             if (document.getElementById('os-password').value === '50884') {
                 document.getElementById('login-screen').style.display = 'none';
-                
-                // Automatically hide the chatbot upon loading desktop environment
                 document.getElementById('chat-container').style.display = 'none';
                 document.getElementById('chat-container').classList.add('os-window-mode');
                 
