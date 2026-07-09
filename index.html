@@ -179,19 +179,60 @@
         #secret-input { width: 55px; height: 35px; background: var(--container-bg); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; text-align: center; font-size: 13px; outline: none; transition: all 0.3s; }
         #secret-input:focus { border-color: var(--accent-color); width: 110px; }
 
-        /* Kinetic Credits & Glitch Styles */
-        @keyframes maretuFlashGrid {
-            0%, 100% { opacity: 0.08; background-size: 30px 30px; }
-            50% { opacity: 0.35; background-color: rgba(255, 0, 0, 0.15); background-size: 25px 25px; }
+        /* Advanced Dark Room & Kinetic Credit System Styles */
+        @keyframes bulbFlicker {
+            0%, 100% { opacity: 0.95; filter: drop-shadow(0 0 30px #fffaed); }
+            3.2% { opacity: 0.15; filter: drop-shadow(0 0 2px rgba(255,250,237,0.1)); }
+            4.8% { opacity: 0.9; filter: drop-shadow(0 0 25px #fffaed); }
+            54% { opacity: 0.95; }
+            54.6% { opacity: 0.2; filter: none; }
+            56% { opacity: 0.85; filter: drop-shadow(0 0 20px #fffaed); }
+            56.8% { opacity: 0.1; }
+            57.4% { opacity: 0.95; filter: drop-shadow(0 0 30px #fffaed); }
+            82% { opacity: 0.95; }
+            82.4% { opacity: 0.3; }
+            83.8% { opacity: 0.95; }
         }
-        @keyframes dynamicTextScroll {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-33.33%); }
+        .bulb-on { animation: bulbFlicker 4s infinite; }
+
+        .parchment-paper {
+            background: #f2e6ce; color: #1c1a16; font-family: 'Courier New', Courier, monospace;
+            padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 40px rgba(139,90,43,0.3);
+            border-radius: 4px; border: 1px solid #c4b087; max-width: 80%; text-align: center;
+            font-size: 18px; font-weight: bold; line-height: 1.6; transform: scale(0.9);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; position: absolute; z-index: 50;
+        }
+        .parchment-paper.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+        @keyframes maretuFlashGrid {
+            0%, 100% { opacity: 0.05; background-size: 32px 32px; }
+            50% { opacity: 0.28; background-color: rgba(255, 0, 0, 0.12); background-size: 24px 24px; }
+        }
+        @keyframes creditBlurGlitch {
+            0%, 100% { filter: blur(0px) contrast(1); }
+            88% { filter: blur(0px) contrast(1); }
+            89% { filter: blur(4px) contrast(2) saturate(2); }
+            91% { filter: blur(0px) contrast(1); }
+            94% { filter: blur(2px) invert(0.1); }
+            95% { filter: blur(0px) contrast(1); }
+        }
+        @keyframes creditShakeGlitch {
+            0%, 100% { transform: translate(0, 0); }
+            90% { transform: translate(0, 0); }
+            91% { transform: translate(-4px, 3px); }
+            93% { transform: translate(4px, -2px); }
+            95% { transform: translate(0, 0); }
+        }
+        @keyframes quickHelpHide {
+            0%, 89%, 91.5%, 100% { opacity: 0; }
+            90%, 91% { opacity: 0.25; }
         }
     </style>
 </head>
 <body class="bg-solid">
 
+<!-- Audio Pipeline Configuration Elements -->
 <audio id="audio-void" src="Forever.mp3" preload="auto"></audio>
 <audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto" loop></audio>
 
@@ -413,7 +454,6 @@
     }
 
     window.openSecretApp = () => {
-        // Trigger Background Credits Scoring Node
         audioCredits.currentTime = 0;
         audioCredits.play().catch(err => console.log("Audio playback blocked pending viewport click mapping metrics.", err));
 
@@ -525,7 +565,6 @@
             function triggerFullscreenVoid() {
                 gameActive = false;
                 
-                // Halt background credits audio track and establish primary Void sequence loop
                 audioCredits.pause();
                 audioVoid.currentTime = 0;
                 audioVoid.play().catch(err => console.log("Audio block active.", err));
@@ -630,74 +669,120 @@
         
         overlay.innerHTML = `
             <div id="room-content" style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; transition: opacity 0.5s;">
-                <div id="room-bulb" style="font-size: 64px; cursor: pointer; filter: drop-shadow(0 0 25px #fffaed); transition: all 0.15s; user-select: none;">💡</div>
-                <div style="display: flex; gap: 25px; z-index: 10;">
-                    <div class="drawer-box" data-note="why did you do this" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [I]</div>
-                    <div class="drawer-box" data-note="why did you abandon me" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [II]</div>
-                    <div class="drawer-box" data-note="the loop goes on forever" style="width: 90px; height: 65px; background: #16161a; border: 2px solid #2d2d34; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: bold; color: #a1a1aa;">🗄️ [III]</div>
+                <div id="room-bulb" class="bulb-on" style="font-size: 64px; cursor: pointer; user-select: none;">💡</div>
+                <div style="display: flex; gap: 35px; z-index: 10; position: relative;">
+                    <div class="drawer-box" data-note="why did you do this" style="width: 105px; height: 75px; background: linear-gradient(#2c2c35, #16161a); border: 2px solid #3f3f46; border-bottom: 5px solid #18181b; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; font-size: 11px; font-weight: bold; color: #a1a1aa; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <div style="width: 25px; height: 6px; background: #52525b; border-radius: 2px; margin-bottom: 8px;"></div>
+                        <span>DRAWER [I]</span>
+                    </div>
+                    <div class="drawer-box" data-note="why did you abandon me" style="width: 105px; height: 75px; background: linear-gradient(#2c2c35, #16161a); border: 2px solid #3f3f46; border-bottom: 5px solid #18181b; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; font-size: 11px; font-weight: bold; color: #a1a1aa; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <div style="width: 25px; height: 6px; background: #52525b; border-radius: 2px; margin-bottom: 8px;"></div>
+                        <span>DRAWER [II]</span>
+                    </div>
+                    <div class="drawer-box" data-note="the loop goes on forever" style="width: 105px; height: 75px; background: linear-gradient(#2c2c35, #16161a); border: 2px solid #3f3f46; border-bottom: 5px solid #18181b; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; font-size: 11px; font-weight: bold; color: #a1a1aa; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <div style="width: 25px; height: 6px; background: #52525b; border-radius: 2px; margin-bottom: 8px;"></div>
+                        <span>DRAWER [III]</span>
+                    </div>
                 </div>
-                <div id="room-note-display" style="font-size: 20px; color: #ef4444; height: 35px; text-align: center; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); min-width: 300px;"></div>
+                <div id="parchment-view" class="parchment-paper"></div>
+                <div id="room-input-container" style="opacity: 0; pointer-events: none; transition: opacity 0.5s; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 20;">
+                    <p style="color: #555; font-size: 12px; letter-spacing: 2px;">ENTER COMMAND PROTOCOL</p>
+                    <input type="text" id="room-terminal-input" style="background: #000; border: 1px solid #333; color: #ff3333; padding: 10px 15px; font-family: monospace; font-size: 16px; outline: none; border-radius: 4px; text-align: center; width: 260px; box-shadow: 0 0 15px rgba(255,0,0,0.15);" autocomplete="off">
+                </div>
             </div>
         `;
         document.body.appendChild(overlay);
 
         let openedDrawers = new Set();
         let drawers = overlay.querySelectorAll('.drawer-box');
-        let noteDisplay = overlay.querySelector('#room-note-display');
+        let parchment = overlay.querySelector('#parchment-view');
         let bulb = overlay.querySelector('#room-bulb');
         let isLightOn = true;
+        let currentActiveDrawer = null;
 
         bulb.onclick = () => {
             isLightOn = !isLightOn;
             if(!isLightOn) {
-                bulb.style.filter = 'none'; bulb.style.opacity = '0.15';
+                bulb.className = ''; bulb.style.opacity = '0.05';
                 overlay.style.background = '#000000';
             } else {
-                bulb.style.filter = 'drop-shadow(0 0 25px #fffaed)'; bulb.style.opacity = '1';
+                bulb.className = 'bulb-on'; bulb.style.opacity = '1';
                 overlay.style.background = '#030303';
             }
         };
 
-        drawers.forEach((drawer, idx) => {
-            drawer.onclick = () => {
-                let textStr = drawer.getAttribute('data-note');
-                noteDisplay.innerText = textStr.toUpperCase();
-                drawer.style.borderColor = '#b91c1c';
-                drawer.style.color = '#ef4444';
-                drawer.style.background = '#2d0606';
-                openedDrawers.add(idx);
+        parchment.onclick = () => {
+            parchment.classList.remove('visible');
+            if (currentActiveDrawer) {
+                currentActiveDrawer.style.transform = 'translateY(0)';
+                currentActiveDrawer = null;
+            }
+            if(openedDrawers.size === drawers.length) {
+                setTimeout(() => {
+                    document.getElementById('room-input-container').style.opacity = '1';
+                    document.getElementById('room-input-container').style.pointerEvents = 'auto';
+                    document.getElementById('room-terminal-input').focus();
+                }, 400);
+            }
+        };
 
-                if(openedDrawers.size === drawers.length) {
-                    setTimeout(() => {
-                        document.getElementById('room-content').style.opacity = '0';
-                        setTimeout(() => {
-                            document.getElementById('room-content').remove();
-                            triggerKineticCredits(overlay);
-                        }, 600);
-                    }, 1800);
-                }
+        drawers.forEach((drawer, idx) => {
+            drawer.onclick = (e) => {
+                e.stopPropagation();
+                if (parchment.classList.contains('visible')) return;
+
+                currentActiveDrawer = drawer;
+                drawer.style.transform = 'translateY(12px)';
+                let textStr = drawer.getAttribute('data-note');
+                
+                parchment.innerText = textStr.toUpperCase();
+                parchment.classList.add('visible');
+                
+                drawer.style.borderColor = '#7f1d1d';
+                drawer.style.color = '#ef4444';
+                openedDrawers.add(idx);
             };
         });
+
+        document.getElementById('room-terminal-input').onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                let val = e.target.value.trim().toLowerCase();
+                if (val === 'escape') {
+                    document.getElementById('room-content').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('room-content').remove();
+                        triggerKineticCredits(overlay);
+                    }, 600);
+                } else {
+                    e.target.value = '';
+                }
+            }
+        };
     };
 
     function triggerKineticCredits(parentOverlay) {
         audioCredits.currentTime = 0;
-        audioCredits.play().catch(err => console.log("Audio metrics standard override active.", err));
+        audioCredits.play().catch(err => console.log("Audio pipeline configuration metric exception.", err));
 
-        // Create canvas layout layer for binary downpour and flashing grids
+        // Background visual layout mechanics layer initialization
         let matrixCanvas = document.createElement('canvas');
         matrixCanvas.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none;';
         parentOverlay.appendChild(matrixCanvas);
 
         let gridElement = document.createElement('div');
-        gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px); animation: maretuFlashGrid 0.18s steps(2, start) infinite;';
+        gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px); animation: maretuFlashGrid 0.15s steps(2, start) infinite;';
         parentOverlay.appendChild(gridElement);
 
-        let textTrackContainer = document.createElement('div');
-        textTrackContainer.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden;';
-        parentOverlay.appendChild(textTrackContainer);
+        // Core dynamic glitch tracking wrapper
+        let fxWrapper = document.createElement('div');
+        fxWrapper.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden; animation: creditBlurGlitch 3.5s infinite direct, creditShakeGlitch 2.8s infinite discrete;';
+        parentOverlay.appendChild(fxWrapper);
 
-        // Instantiating canvas metrics parameters
+        let helpFlashNode = document.createElement('div');
+        helpFlashNode.style.cssText = 'position: absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); color:#ff0000; font-family:Impact,sans-serif; font-size:150px; display:flex; align-items:center; justify-content:center; z-index:100; pointer-events:none; opacity:0; animation: quickHelpHide 4.2s infinite; letter-spacing:10px;';
+        helpFlashNode.innerHTML = '<h1>HELP</h1>';
+        parentOverlay.appendChild(helpFlashNode);
+
         let ctx = matrixCanvas.getContext('2d');
         let resizeMatrix = () => {
             matrixCanvas.width = window.innerWidth;
@@ -727,39 +812,50 @@
         }
         requestAnimationFrame(renderMatrixRain);
 
-        // Assemble credit block sequences structured inside infinitely translating loop layers
+        // Multi-tier expanded structural credits definitions matrix mapping layout dependencies
         let creditBlocksPool = [
             { role: "FABRICATOR", name: "Albertsodsr" },
             { role: "SOUND DESIGNER", name: "Albertsodsr" },
             { role: "CODER", name: "Albertsodsr" },
             { role: "VISUAL ARCHITECT", name: "Albertsodsr" },
+            { role: "LEVEL DESIGNER", name: "Albertsodsr" },
+            { role: "PRODUCTION MANAGER", name: "Albertsodsr" },
             { role: "SYSTEM MONITOR", name: "Albertsodsr" },
+            { role: "QUALITY ASSURANCE", name: "Albertsodsr" },
             { role: "EXECUTIVE DIRECTOR", name: "Albertsodsr" }
         ];
 
         let scrollingTrackEl = document.createElement('div');
-        scrollingTrackEl.style.cssText = 'display: flex; flex-direction: column; gap: 60px; padding-top: 100vh; width: 100%; text-align: center; font-weight: 900; letter-spacing: 4px;';
-        textTrackContainer.appendChild(scrollingTrackEl);
+        scrollingTrackEl.style.cssText = 'display: flex; flex-direction: column; gap: 70px; padding-top: 100vh; width: 100%; text-align: center; font-weight: 900; letter-spacing: 4px; will-change: transform;';
+        fxWrapper.appendChild(scrollingTrackEl);
 
         function appendCreditNodes() {
             creditBlocksPool.forEach(block => {
                 let blockNode = document.createElement('div');
-                blockNode.style.cssText = 'margin: 40px 0; padding: 10px; text-shadow: 0 0 12px #ff0000;';
+                blockNode.style.cssText = 'margin: 50px 0; padding: 10px; text-shadow: 0 0 15px rgba(255,0,0,0.6);';
                 blockNode.innerHTML = `
-                    <div style="color: #666; font-size: 24px; animation: textJitter 0.15s infinite; font-family: Impact, sans-serif;">${block.role}</div>
-                    <div style="color: #fff; font-size: 56px; margin-top: 5px; font-family: Arial, sans-serif; letter-spacing: -1px;">${block.name.toUpperCase()}</div>
+                    <div style="color: #555; font-size: 26px; animation: textJitter 0.2s infinite; font-family: 'Courier New', monospace; font-weight: bold;">${block.role}</div>
+                    <div style="color: #fff; font-size: 64px; margin-top: 6px; font-family: Arial, sans-serif; letter-spacing: -2px; font-weight: 900;">${block.name.toUpperCase()}</div>
                 `;
                 scrollingTrackEl.appendChild(blockNode);
             });
         }
 
-        // Standard dynamic expansion metrics tracking to satisfy multi-iteration infinite scrolling loops
+        // Generate infinite pool segments loops tracking structure thresholds
         for(let loopIdx=0; loopIdx<4; loopIdx++) appendCreditNodes();
 
         let verticalOffsetPos = 0;
-        function updateKineticRhythmScroll() {
-            verticalOffsetPos += 5.5; // High speed rhythmic layout step translations
-            scrollingTrackEl.style.transform = `translateY(-${verticalOffsetPos}px)`;
+        let lastTimestamp = 0;
+        const scrollVelocitySpeed = 0.28; // Linear pixel delta tracking step translation matrix
+
+        function updateKineticRhythmScroll(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            let delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            // Enforcing frame-rate agnostic smooth float tracking delta steps
+            verticalOffsetPos += scrollVelocitySpeed * (delta > 0 ? delta : 16.66);
+            scrollingTrackEl.style.transform = `translate3d(0, -${verticalOffsetPos}px, 0)`;
 
             if (verticalOffsetPos >= (scrollingTrackEl.scrollHeight / 2)) {
                 verticalOffsetPos = 0;
@@ -831,7 +927,6 @@
             document.getElementById('header-title').innerText = "🌌 Cosmic Dream Assistant";
             appendMessage("Goodnight! Cosmic theme loaded.", 'ai');
             
-            // Constrain command operations layer during Active Dream Phase
             let inputControlNode = document.getElementById('secret-input');
             inputControlNode.value = '';
             inputControlNode.placeholder = "now's not the time";
