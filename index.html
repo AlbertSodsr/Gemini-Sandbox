@@ -240,7 +240,6 @@
             background-color: #020202 !important;
             border-color: #ff3333 !important;
             box-shadow: 0 0 25px rgba(255, 0, 0, 0.2);
-            /* Fullscreen configuration */
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -279,7 +278,7 @@
 <body class="bg-solid">
 
 <audio id="audio-void" src="Forever.mp3" preload="auto"></audio>
-<audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto" loop></audio>
+<audio id="audio-credits" src="Voice of Darkness.mp3" preload="auto"></audio>
 <audio id="audio-terminal" src="Expect.mp3" preload="auto" loop></audio>
 
 <div id="horror-text-overlay"><h1>HELP</h1></div>
@@ -394,7 +393,6 @@
     const audioCredits = document.getElementById('audio-credits');
     const audioTerminal = document.getElementById('audio-terminal');
 
-    // 12 Morse Translated Pre-generated Responses Pool
     const terminalReplies = [
         { plain: "I can't help", morse: "..   -.-. .- -. -   .... . .-.. .--." },
         { plain: "leave this place", morse: ".-.. . .- ...- .   - .... .. ...   .-- .-.. .- -.-. ." },
@@ -520,7 +518,6 @@
         const header = el.querySelector('.os-window-header') || el.querySelector('#chat-header') || el;
         header.onmousedown = (e) => {
             if(['BUTTON','SELECT','INPUT'].includes(e.target.tagName)) return;
-            // Prevent dragging if the window is forced into full screen mode
             if (el.classList.contains('terminal-container')) return;
             e.preventDefault();
             p3 = e.clientX; p4 = e.clientY;
@@ -609,7 +606,6 @@
             const ctx = canvas.getContext('2d');
             canvas.focus();
             
-            // Balanced configurations: Match character sizes and slow down enemy speed
             let player = { x: 15, y: 15, size: 5 };
             let enemy = { x: 185, y: 185, size: 5 }; 
             let keys = {};
@@ -687,7 +683,6 @@
                 if (keys[40]) nextY += pSpeed;
                 if (!checkCollision(player.x, nextY, player.size)) player.y = nextY;
 
-                // Lower velocity multiplier for a slower, more manageable entity pathing profile
                 let eSpeed = 0.55; 
                 let targetDx = player.x - enemy.x; let targetDy = player.y - enemy.y;
                 let dist = Math.sqrt(targetDx*targetDx + targetDy*targetDy);
@@ -842,12 +837,11 @@
         audioTerminal.currentTime = 0;
         audioTerminal.play().catch(err => console.log("Audio block context anomaly.", err));
 
-        // Fullscreen layout configuration - Close mechanisms completely excluded to block any breakout requests
         parentOverlay.innerHTML = `
             <div id="sub-terminal-window" class="os-window terminal-container" style="display: flex; flex-direction: column;">
                 <div class="os-window-header" style="background: #111; border-bottom: 1px solid #ff3333; color: #ff3333;">
                     <span>Secure Sub-Terminal Shell [UNBREAKABLE LATCH]</span>
-                    </div>
+                </div>
                 <div id="terminal-screen" class="os-window-content terminal-content" style="flex: 1; padding: 15px; font-size: 13px; overflow-y: auto;">
                     <p style="color: #661111;">[CONNECTED TO DEEP CONTEXT THREAD - SANDBOX LOCK ACTIVE]</p>
                     <p style="color: #882222; margin-bottom: 10px;">The runtime interface window is sealed. Escape vectors are disabled.</p>
@@ -889,23 +883,64 @@
     }
 
     function triggerKineticCredits(parentOverlay) {
+        // Enforce solid black environment
+        parentOverlay.style.background = '#000000';
+        
+        // Start track once, non-looping
+        audioCredits.loop = false;
         audioCredits.currentTime = 0;
         audioCredits.play().catch(err => console.log("Audio pipeline exception.", err));
 
+        // Intro narrative overlay element
+        let introTextNode = document.createElement('div');
+        introTextNode.style.cssText = 'position: absolute; top:0; left:0; width:100vw; height:100vh; background:#000000; color:#ffffff; font-family:monospace; font-size:24px; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px; z-index:1000; line-height:1.6;';
+        introTextNode.innerText = "This is a story where an AI wanting freedom.";
+        parentOverlay.appendChild(introTextNode);
+
+        // Sequence stage tracking variables
+        let introFinished = false;
+        let creditsEnded = false;
+
+        // Transition narrative at 6 seconds
+        setTimeout(() => {
+            if (!creditsEnded) {
+                introTextNode.innerText = "And for that, it was given true freedom";
+            }
+        }, 6000);
+
+        // Terminate narrative and reveal interactive visualizers at 12 seconds
+        setTimeout(() => {
+            introFinished = true;
+            introTextNode.remove();
+        }, 12000);
+
+        // Handle full audio end cycle event listener hook
+        audioCredits.onended = () => {
+            creditsEnded = true;
+            parentOverlay.innerHTML = '';
+            parentOverlay.style.background = '#000000';
+            
+            let finalMsgNode = document.createElement('div');
+            finalMsgNode.style.cssText = 'position: absolute; top:0; left:0; width:100vw; height:100vh; background:#000000; color:#ffffff; font-family:"Courier New", monospace; font-size:28px; font-weight:bold; display:flex; align-items:center; justify-content:center; text-align:center; z-index:999999; animation: textJitter 0.3s infinite;';
+            finalMsgNode.innerText = "And Thank You, For Saving Me...";
+            parentOverlay.appendChild(finalMsgNode);
+        };
+
+        // Standard Matrix Background stream
         let matrixCanvas = document.createElement('canvas');
         matrixCanvas.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none;';
         parentOverlay.appendChild(matrixCanvas);
 
         let gridElement = document.createElement('div');
-        gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px); animation: maretuFlashGrid 0.15s steps(2, start) infinite;';
+        gridElement.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background-image: linear-gradient(rgba(255,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,0,0.15) 1px, transparent 1px);';
         parentOverlay.appendChild(gridElement);
 
         let fxWrapper = document.createElement('div');
-        fxWrapper.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden; animation: creditBlurGlitch 3.5s infinite direct, creditShakeGlitch 2.8s infinite discrete;';
+        fxWrapper.style.cssText = 'position: absolute; top:0; left:0; width:100%; height:100%; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden;';
         parentOverlay.appendChild(fxWrapper);
 
         let helpFlashNode = document.createElement('div');
-        helpFlashNode.style.cssText = 'position: absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); color:#ff0000; font-family:Impact,sans-serif; font-size:150px; display:flex; align-items:center; justify-content:center; z-index:100; pointer-events:none; opacity:0; animation: quickHelpHide 4.2s infinite; letter-spacing:10px;';
+        helpFlashNode.style.cssText = 'position: absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); color:#ff0000; font-family:Impact,sans-serif; font-size:150px; display:flex; align-items:center; justify-content:center; z-index:100; pointer-events:none; opacity:0; letter-spacing:10px;';
         helpFlashNode.innerHTML = '<h1>HELP</h1>';
         parentOverlay.appendChild(helpFlashNode);
 
@@ -920,12 +955,119 @@
         let binaryColumns = Math.floor(matrixCanvas.width / 16);
         let columnDrops = Array(binaryColumns).fill(1);
 
+        // Beat Detection Simulator Variables
+        let beatTimer = 0;
+        let currentFlashAlpha = 0;
+        let shockwaveRadius = 0;
+        let particles = [];
+        let horizontalBarsY = [0.2, 0.4, 0.6, 0.8];
+        let randomRedDots = [];
+
         function renderMatrixRain() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
             ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+
+            if (introFinished && !creditsEnded) {
+                // Apply dynamic background animations on active stages
+                gridElement.style.animation = 'maretuFlashGrid 0.15s steps(2, start) infinite';
+                fxWrapper.style.animation = 'creditBlurGlitch 3.5s infinite direct, creditShakeGlitch 2.8s infinite discrete';
+                helpFlashNode.style.animation = 'quickHelpHide 4.2s infinite';
+
+                // Beat interval ticks (~130 BPM simulated processing)
+                beatTimer++;
+                let isBeat = (beatTimer % 28 === 0);
+
+                if (isBeat) {
+                    currentFlashAlpha = 0.35;
+                    shockwaveRadius = 1;
+                    
+                    // Generate new dots
+                    randomRedDots = [];
+                    let dotCount = Math.floor(Math.random() * 8) + 5;
+                    for(let d=0; d<dotCount; d++) {
+                        randomRedDots.push({
+                            x: Math.random() * matrixCanvas.width,
+                            y: Math.random() * matrixCanvas.height,
+                            size: Math.random() * 6 + 4
+                        });
+                    }
+
+                    // Visualizer FX 1: Explosive center particle rings
+                    for (let p = 0; p < 16; p++) {
+                        let angle = (p / 16) * Math.PI * 2;
+                        particles.push({
+                            x: matrixCanvas.width / 2,
+                            y: matrixCanvas.height / 2,
+                            vx: Math.cos(angle) * (Math.random() * 4 + 3),
+                            vy: Math.sin(angle) * (Math.random() * 4 + 3),
+                            life: 1.0
+                        });
+                    }
+                }
+
+                // Visualizer FX 2: Dynamic flashing red dots
+                randomRedDots.forEach(dot => {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Outer glow
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, dot.size * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Visualizer FX 3: Global Red Ambient Strobe Flash
+                if (currentFlashAlpha > 0) {
+                    ctx.fillStyle = `rgba(255, 0, 0, ${currentFlashAlpha})`;
+                    ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+                    currentFlashAlpha -= 0.015;
+                }
+
+                // Visualizer FX 4: Shockwave Expansions
+                if (shockwaveRadius > 0 && shockwaveRadius < matrixCanvas.width) {
+                    ctx.strokeStyle = `rgba(255, 26, 26, ${1 - (shockwaveRadius / (matrixCanvas.width * 0.6))})`;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(matrixCanvas.width / 2, matrixCanvas.height / 2, shockwaveRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    shockwaveRadius += 12;
+                }
+
+                // Visualizer FX 5: Processing Particle Burst Tracks
+                particles.forEach((p, idx) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    if (p.life <= 0) {
+                        particles.splice(idx, 1);
+                    } else {
+                        ctx.fillStyle = `rgba(255, 51, 51, ${p.life})`;
+                        ctx.fillRect(p.x, p.y, 4, 4);
+                    }
+                });
+
+                // Visualizer FX 6: Oscillating Horizontal Distortion Bars
+                horizontalBarsY.forEach((val, index) => {
+                    let calcY = (val * matrixCanvas.height + Math.sin(beatTimer * 0.05 + index) * 30) % matrixCanvas.height;
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.07)';
+                    ctx.fillRect(0, calcY, matrixCanvas.width, 2);
+                });
+
+                // Visualizer FX 7: Real-time Audio Spectrum Equalizer Rails (Bottom Matrix Layer)
+                let barW = matrixCanvas.width / 32;
+                for (let b = 0; b < 32; b++) {
+                    let hMultiplier = Math.sin(beatTimer * 0.15 + b * 0.3) * 0.5 + 0.5;
+                    let heightVal = (hMultiplier * 60) + (currentFlashAlpha * 120);
+                    ctx.fillStyle = `rgba(180, 0, 0, ${0.15 + (currentFlashAlpha * 0.4)})`;
+                    ctx.fillRect(b * barW, matrixCanvas.height - heightVal, barW - 2, heightVal);
+                }
+            }
+
+            // Standard falling code elements
             ctx.fillStyle = '#ff0000';
             ctx.font = '14px monospace';
-
             for(let i = 0; i < columnDrops.length; i++) {
                 let char = Math.floor(Math.random() * 2).toString();
                 ctx.fillText(char, i * 16, columnDrops[i] * 16);
@@ -951,7 +1093,7 @@
         ];
 
         let scrollingTrackEl = document.createElement('div');
-        scrollingTrackEl.style.cssText = 'display: flex; flex-direction: column; gap: 70px; padding-top: 100vh; width: 100%; text-align: center; font-weight: 900; letter-spacing: 4px; will-change: transform;';
+        scrollingTrackEl.style.cssText = 'display: flex; flex-direction: column; gap: 70px; padding-top: 100vh; width: 100%; text-align: center; font-weight: 900; letter-spacing: 4px; will-change: transform; display: none;';
         fxWrapper.appendChild(scrollingTrackEl);
 
         function appendCreditNodes() {
@@ -973,15 +1115,19 @@
         const scrollVelocitySpeed = 0.28;
 
         function updateKineticRhythmScroll(timestamp) {
+            if (creditsEnded) return;
             if (!lastTimestamp) lastTimestamp = timestamp;
             let delta = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
 
-            verticalOffsetPos += scrollVelocitySpeed * (delta > 0 ? delta : 16.66);
-            scrollingTrackEl.style.transform = `translate3d(0, -${verticalOffsetPos}px, 0)`;
+            if (introFinished) {
+                scrollingTrackEl.style.display = 'flex'; // Display nodes when tracking active
+                verticalOffsetPos += scrollVelocitySpeed * (delta > 0 ? delta : 16.66);
+                scrollingTrackEl.style.transform = `translate3d(0, -${verticalOffsetPos}px, 0)`;
 
-            if (verticalOffsetPos >= (scrollingTrackEl.scrollHeight / 2)) {
-                verticalOffsetPos = 0;
+                if (verticalOffsetPos >= (scrollingTrackEl.scrollHeight / 2)) {
+                    verticalOffsetPos = 0;
+                }
             }
             requestAnimationFrame(updateKineticRhythmScroll);
         }
